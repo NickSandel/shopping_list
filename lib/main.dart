@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
       ),
-      home: ShoppingList(),
+      home: const ShoppingList(),
     );
   }
 }
@@ -86,18 +87,28 @@ class ShoppingListItem extends StatelessWidget {
 }
 
 class ShoppingList extends StatefulWidget {
-  // const ShoppingList({required this.products, super.key});
-
-  // final List<Product> products;
+  const ShoppingList({super.key});
 
   @override
-  _ShoppingListState createState() => _ShoppingListState();
+  ShoppingListState createState() => ShoppingListState();
 }
 
-class _ShoppingListState extends State<ShoppingList> {
-  final List<Product> _shoppingItems = <Product>[];
+class ShoppingListState extends State<ShoppingList> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final List<String> _shoppingItems = <String>[];
   final List<Product> _shoppingList = <Product>[];
   final TextEditingController _textFieldController = TextEditingController();
+
+  Future<void> _getShoppingItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> items = prefs.getStringList("shopping_list") ?? [];
+    _shoppingItems.clear();
+    for (String item in items) {
+      _shoppingItems.add(item);
+    }
+    setState(() {});
+    // });
+  }
 
   void _handleCartChanged(Product product, bool inCart) {
     setState(() {
@@ -110,9 +121,20 @@ class _ShoppingListState extends State<ShoppingList> {
       if (!inCart) {
         _shoppingList.add(product);
       } else {
-        _shoppingList.remove(product);
+        _removeItem(product.name);
       }
     });
+  }
+
+  void _removeItem(String itemName) {
+    // Loop through to find the product to remove but only remove it after
+    List<Product> itemToRemove = <Product>[];
+    for (Product listItem in _shoppingList) {
+      if (listItem.name == itemName) {
+        itemToRemove.add(listItem);
+      }
+    }
+    _shoppingList.removeWhere((item) => itemToRemove.contains(item));
   }
 
   void _handleItemRemoved(Product product) {
@@ -123,8 +145,18 @@ class _ShoppingListState extends State<ShoppingList> {
       // The framework then calls build, below,
       // which updates the visual appearance of the app.
 
-      _shoppingItems.remove(product);
+      _shoppingItems.remove(product.name);
+      save(_shoppingItems);
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      _getShoppingItems();
+    });
+    setState(() {});
   }
 
   @override
@@ -145,10 +177,16 @@ class _ShoppingListState extends State<ShoppingList> {
     // Wrapping it inside a set state will notify
     // the app that the state has changed
     setState(() {
-      _shoppingItems.add(Product(name: title));
-      _shoppingList.add(Product(name: title));
+      _shoppingItems.add(title);
+      save(_shoppingItems);
     });
     _textFieldController.clear();
+  }
+
+  void save(list) async {
+    final prefs = await _prefs;
+    await prefs.remove("shopping_list");
+    await prefs.setStringList("shopping_list", list);
   }
 
   // Generate a single item widget
@@ -157,10 +195,10 @@ class _ShoppingListState extends State<ShoppingList> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Add a task to your list'),
+            title: const Text('Add an item to your shopping'),
             content: TextField(
               controller: _textFieldController,
-              decoration: const InputDecoration(hintText: 'Enter task here'),
+              decoration: const InputDecoration(hintText: 'Enter item here'),
             ),
             actions: <Widget>[
               TextButton(
@@ -183,22 +221,23 @@ class _ShoppingListState extends State<ShoppingList> {
 
   List<Widget> _getItems() {
     final List<Widget> todoWidgets = <Widget>[];
-    for (Product product in _shoppingItems) {
+    for (String product in _shoppingItems) {
       todoWidgets.add(ShoppingListItem(
-        product: product,
-        inCart: _shoppingList.contains(product),
+        product: Product(name: product),
+        inCart: _checkList(product),
         onCartChanged: _handleCartChanged,
         onRemoveItem: _handleItemRemoved,
       ));
     }
     return todoWidgets;
+  }
 
-    // return widget.products.map((product) {
-    //   return ShoppingListItem(
-    //     product: product,
-    //     inCart: _shoppingList.contains(product),
-    //     onCartChanged: _handleCartChanged,
-    //   );
-    // }).toList();
+  bool _checkList(name) {
+    for (Product product in _shoppingList) {
+      if (product.name == name) {
+        return true;
+      }
+    }
+    return false;
   }
 }
