@@ -199,6 +199,7 @@ class ShoppingListState extends State<ShoppingList> {
             content: TextField(
               controller: _textFieldController,
               decoration: const InputDecoration(hintText: 'Enter item here'),
+              textCapitalization: TextCapitalization.words,
             ),
             actions: <Widget>[
               TextButton(
