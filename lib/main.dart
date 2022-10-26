@@ -167,6 +167,12 @@ class ShoppingListState extends State<ShoppingList> {
   }
 
   @override
+  void dispose() {
+    _textFieldController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Shopping List')),
@@ -217,6 +223,7 @@ class ShoppingListState extends State<ShoppingList> {
           return AlertDialog(
             title: const Text('Add an item to your shopping'),
             content: TextField(
+              autofocus: true,
               controller: _textFieldController,
               decoration: const InputDecoration(hintText: 'Enter item here'),
               textCapitalization: TextCapitalization.words,
@@ -225,6 +232,7 @@ class ShoppingListState extends State<ShoppingList> {
               TextButton(
                 child: const Text('ADD'),
                 onPressed: () {
+                  if (_textFieldController.text.isEmpty) return;
                   Navigator.of(context).pop();
                   _addShoppingItem(_textFieldController.text);
                 },
