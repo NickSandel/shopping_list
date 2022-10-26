@@ -199,11 +199,13 @@ class ShoppingListState extends State<ShoppingList> {
     );
   }
 
-  void _addShoppingItem(String title) {
+  void _addShoppingItem() {
     // Wrapping it inside a set state will notify
     // the app that the state has changed
+    if (_textFieldController.text.isEmpty) return;
+    Navigator.of(context).pop();
     setState(() {
-      _shoppingItems.add(title);
+      _shoppingItems.add(_textFieldController.text);
       save(_shoppingItems);
     });
     _textFieldController.clear();
@@ -227,14 +229,13 @@ class ShoppingListState extends State<ShoppingList> {
               controller: _textFieldController,
               decoration: const InputDecoration(hintText: 'Enter item here'),
               textCapitalization: TextCapitalization.words,
+              onSubmitted: (_) => _addShoppingItem(),
             ),
             actions: <Widget>[
               TextButton(
                 child: const Text('ADD'),
                 onPressed: () {
-                  if (_textFieldController.text.isEmpty) return;
-                  Navigator.of(context).pop();
-                  _addShoppingItem(_textFieldController.text);
+                  _addShoppingItem();
                 },
               ),
               TextButton(
