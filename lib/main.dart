@@ -137,6 +137,13 @@ class ShoppingListState extends State<ShoppingList> {
     _shoppingList.removeWhere((item) => itemToRemove.contains(item));
   }
 
+  void _removeAll() {
+    setState(() {
+      _shoppingItems.clear();
+      save(_shoppingItems);
+    });
+  }
+
   void _handleItemRemoved(Product product) {
     setState(() {
       // When a user changes what's in the cart, you need
@@ -166,10 +173,23 @@ class ShoppingListState extends State<ShoppingList> {
       body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           children: _getItems()),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton:
+          Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+        FloatingActionButton(
           onPressed: () => _displayDialog(context),
           tooltip: 'Add Item',
-          child: const Icon(Icons.add)),
+          heroTag: null,
+          child: const Icon(Icons.add),
+        ),
+        const SizedBox(
+          height: 30,
+        ),
+        FloatingActionButton(
+            onPressed: () => _removeAll(),
+            tooltip: 'Remove All',
+            heroTag: null,
+            child: const Icon(Icons.delete_sweep_rounded)),
+      ]),
     );
   }
 
